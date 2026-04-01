@@ -1,2 +1,5 @@
-# notecata
-Notes Catalogue
+notecata
+========
+
+Notes catalogue
+

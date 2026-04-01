@@ -1,0 +1,40 @@
+{{define "content"}}
+<div>
+  <div>
+    <a href="/{{ JoinPath "note/" .Path }}" class="btn btn-secondary icon-link" tabindex="-1" role="button" aria-disabled="true">
+      <svg class="bi my-1 theme-icon-active" aria-hidden="true"><use href="#arrow-90deg-up"></use></svg>back</a>
+  </div>
+  <b>{{.Path}} {{if .IsAdd}}Add{{else}}Edit{{end}} note:</b>
+  <div>
+    <form method="POST" action="/{{ JoinPath "notemanage/" .Path }}{{if .IsAdd}}{{PathSeparator}}{{end}}" class="needs-validation" novalidate>
+      {{if .IsAdd}}
+      <div class="mb-3">
+        <label for="nameInput" class="form-label">Name</label>
+        <input type="text" id="nameInput" class="form-control" name="name" placeholder="Note name" aria-describedby="nameHelp" autocomplete="off" required>
+        <div id="nameHelp" class="form-text">Enter english symbols without spaces</div>
+        <div class="invalid-feedback">
+          Please enter a note name
+        </div>
+      </div>
+      {{end}}
+      <div class="mb-3">
+        <label for="titleInput" class="form-label">Title</label>
+        <input type="text" id="titleInput" class="form-control" name="title"{{if not .IsAdd}} value="{{.Note.Metadata.Title}}"{{end}} autocomplete="off">
+      </div>
+      <div class="mb-3">
+        <label for="tagsInput" class="form-label">Tags</label>
+        <input type="text" id="tagsInput" class="form-control" name="tags" aria-describedby="tagsHelp"{{if not .IsAdd}} value="{{range $i, $v := .Note.Metadata.Tags}}{{if $i}} {{end}}{{.}}{{end}}"{{end}} autocomplete="off">
+        <div id="tagsHelp" class="form-text">Enter tags separated by spaces</div>
+      </div>
+      <div class="mb-3">
+        <label for="validationNote" class="form-label">Note</label>
+        <textarea class="form-control" id="validationNote" name="note" placeholder="Note content" rows="10" required>{{if not .IsAdd}}{{printf "%s" .Note.Content}}{{end}}</textarea>
+        <div class="invalid-feedback">
+          Please enter a note in the textarea
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+  </div>
+</div>
+{{end}}

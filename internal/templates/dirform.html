@@ -1,0 +1,22 @@
+{{define "content"}}
+<div>
+  <div>
+    <a href="/{{ JoinPath "note/" .Path }}" class="btn btn-secondary icon-link" tabindex="-1" role="button" aria-disabled="true">
+      <svg class="bi my-1 theme-icon-active" aria-hidden="true"><use href="#arrow-90deg-up"></use></svg>back</a>
+  </div>
+  <b>{{.Path}}{{PathSeparator}} Create directory:</b>
+  <div>
+    <form method="POST" action="/{{ JoinPath "createdir/" .Path }}{{PathSeparator}}" class="needs-validation" novalidate>
+      <div class="mb-3">
+        <label for="nameInput" class="form-label">Name</label>
+        <input type="text" id="nameInput" class="form-control" name="name" placeholder="Directory name" aria-describedby="nameHelp" autocomplete="off" required>
+        <div id="nameHelp" class="form-text">Enter english symbols without spaces</div>
+        <div class="invalid-feedback">
+          Please enter a directory name
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+  </div>
+</div>
+{{end}}

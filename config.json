@@ -1,0 +1,5 @@
+{
+    "root": "./notes",
+    "port": 8080,
+    "storage": "file"
+}

@@ -1,0 +1,19 @@
+[Unit]
+Description=NoteCata - notes catalogue
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+
+WorkingDirectory=/usr/local/share/notecata
+
+StandardOutput=journal
+StandardError=journal
+
+ExecStart=/usr/local/share/notecata/notecatad
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
