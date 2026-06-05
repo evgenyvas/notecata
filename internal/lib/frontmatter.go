@@ -1,7 +1,7 @@
 // Package model
-package model
+package lib
 
-var FrontmatterMeta struct {
+type FrontmatterMeta struct {
 	Format string   `yaml:"format"`
 	Date   string   `yaml:"date"`
 	Title  string   `yaml:"title"`

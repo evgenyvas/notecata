@@ -2,12 +2,12 @@
 package lib
 
 import (
-	"github.com/adrg/frontmatter"
 	"log"
-	"notecata/internal/lib/model"
 	"slices"
 	"strings"
 	"time"
+
+	"github.com/adrg/frontmatter"
 )
 
 type NoteOrDirectory interface {
@@ -42,15 +42,16 @@ type MetadataNote struct {
 }
 
 func ParseMetadata(input string) (meta MetadataNote, rest []byte) {
-	rest, err := frontmatter.Parse(strings.NewReader(input), &model.FrontmatterMeta)
+	model := new(FrontmatterMeta)
+	rest, err := frontmatter.Parse(strings.NewReader(input), model)
 	if err != nil {
 		log.Fatalf("Error parsing metadata: %v\n", err)
 		panic("metadata")
 	}
 	meta = MetadataNote{
-		Format: model.FrontmatterMeta.Format,
-		Title:  model.FrontmatterMeta.Title,
-		Tags:   model.FrontmatterMeta.Tags,
+		Format: model.Format,
+		Title:  model.Title,
+		Tags:   model.Tags,
 	}
 	if meta.Format == "" || !slices.Contains(
 		[]string{"Markdown", "reStructuredText"},
@@ -58,11 +59,13 @@ func ParseMetadata(input string) (meta MetadataNote, rest []byte) {
 		meta.Format = "Markdown"
 	}
 
-	t, err := time.Parse("2006-01-02 15:04:05", model.FrontmatterMeta.Date)
-	if err != nil {
-		log.Println("Error parsing date:", err)
-	} else {
-		meta.Date = t
+	if model.Date != "" {
+		t, err := time.Parse("2006-01-02 15:04:05", model.Date)
+		if err != nil {
+			log.Println("Error parsing date:", err)
+		} else {
+			meta.Date = t
+		}
 	}
 
 	return meta, rest

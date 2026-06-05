@@ -7,6 +7,9 @@
 *.dll
 *.so
 *.dylib
+notecata
+notecata-coverage
+notecatad
 
 # Test binary, built with `go test -c`
 *.test
@@ -16,6 +19,8 @@
 coverage.*
 *.coverprofile
 profile.cov
+.coverdata
+profile.txt
 
 # Dependency directories (remove the comment below to include it)
 # vendor/

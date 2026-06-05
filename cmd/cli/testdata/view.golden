@@ -1,0 +1,8 @@
+---
+format: "Markdown"
+date: "{{ DATE_NOW }}"
+title: "test"
+tags: []
+---
+test
+input data

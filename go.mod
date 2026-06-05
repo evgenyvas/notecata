@@ -4,6 +4,7 @@ go 1.25.8
 
 require (
 	github.com/adrg/frontmatter v0.2.0
+	github.com/creack/pty v1.1.24
 	github.com/mattn/go-isatty v0.0.20
 	github.com/yuin/goldmark v1.8.2
 )

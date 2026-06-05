@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 	"sync"
 	"text/template"
 	"time"
@@ -52,6 +53,13 @@ var ErrPathIsDirectory = errors.New("by note path found a directory")
 func (s *FileStore) getFullPath(path string) string {
 	config := config.GetConfig()
 	return filepath.Join(config.Root, path)
+}
+
+func (s *FileStore) checkEmptyPath(path string) error {
+	if strings.TrimSpace(path) == "" {
+		return errors.New("path must not be empty")
+	}
+	return nil
 }
 
 func (s *FileStore) Note(path string) (*Note, error) {
@@ -164,8 +172,13 @@ func (s *FileStore) SaveNote(path string, content []byte, meta MetadataNote) (*N
 }
 
 func (s *FileStore) CreateDirectory(path string) error {
+	err := s.checkEmptyPath(path)
+	if err != nil {
+		log.Printf("Error creating directory %s: %v\n", path, err)
+		return err
+	}
 	fullPath := s.getFullPath(path)
-	err := os.MkdirAll(fullPath, os.ModePerm)
+	err = os.MkdirAll(fullPath, os.ModePerm)
 	if err != nil {
 		log.Printf("Error creating directory %s: %v\n", fullPath, err)
 		return err
@@ -174,6 +187,11 @@ func (s *FileStore) CreateDirectory(path string) error {
 }
 
 func (s *FileStore) DeleteNote(path string) (*Note, error) {
+	err := s.checkEmptyPath(path)
+	if err != nil {
+		log.Printf("Error removing directory %s: %v\n", path, err)
+		return nil, err
+	}
 	fullPath := s.getFullPath(path)
 	note, err := s.Note(path)
 	if errors.Is(err, ErrPathIsDirectory) {

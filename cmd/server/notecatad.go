@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/yuin/goldmark"
 	"html/template"
 	"log"
 	"net/http"
@@ -17,12 +16,22 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/yuin/goldmark"
 )
 
-func apiGetNotes(w http.ResponseWriter, r *http.Request) {
+type API struct {
+	Store lib.Store
+	//Logger     Logger
+	//Config     Config
+	//Mailer     Mailer
+	//Cache      Cache
+}
+
+func (api *API) getNotes(w http.ResponseWriter, r *http.Request) {
 	path := r.PathValue("path")
-	storageService := lib.GetStorageService()
-	notes, err := storageService.Store.Notes(path)
+
+	notes, err := api.Store.Notes(path)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -44,14 +53,15 @@ func apiGetNotes(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(apiNotesList)
 }
 
-func apiGetNote(w http.ResponseWriter, r *http.Request) {
+func (api *API) getNote(w http.ResponseWriter, r *http.Request) {
 	path := r.PathValue("path")
-	storageService := lib.GetStorageService()
-	note, err := storageService.Store.Note(path)
+
+	note, err := api.Store.Note(path)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
 	apiNote := lib.APINoteSingle{
 		APIStatus: lib.APIStatus{
 			Status:  http.StatusOK,
@@ -64,7 +74,7 @@ func apiGetNote(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(apiNote)
 }
 
-func apiSaveNote(w http.ResponseWriter, r *http.Request) {
+func (api *API) saveNote(w http.ResponseWriter, r *http.Request) {
 	var note lib.APINotePost
 	err := json.NewDecoder(r.Body).Decode(&note)
 	if err != nil {
@@ -78,25 +88,28 @@ func apiSaveNote(w http.ResponseWriter, r *http.Request) {
 		Tags:   note.Tags,
 	}
 	path := r.PathValue("path")
-	storageService := lib.GetStorageService()
-	_, err = storageService.Store.SaveNote(path, []byte(note.Content), metaInput)
+
+	newNote, err := api.Store.SaveNote(path, []byte(note.Content), metaInput)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	apiStatus := lib.APIStatus{
-		Status:  http.StatusOK,
-		Message: fmt.Sprintf("Note %s saved successfully", path),
+	apiNote := lib.APINoteSingle{
+		APIStatus: lib.APIStatus{
+			Status:  http.StatusOK,
+			Message: fmt.Sprintf("Note %s saved successfully", path),
+		},
+		APINote: lib.ToAPI(*newNote).(lib.APINote),
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(apiStatus)
+	json.NewEncoder(w).Encode(apiNote)
 }
 
-func apiDeleteNote(w http.ResponseWriter, r *http.Request) {
+func (api *API) deleteNote(w http.ResponseWriter, r *http.Request) {
 	path := r.PathValue("path")
-	storageService := lib.GetStorageService()
-	_, err := storageService.Store.DeleteNote(path)
+
+	_, err := api.Store.DeleteNote(path)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -321,11 +334,16 @@ func createDir(w http.ResponseWriter, r *http.Request) {
 func main() {
 	config := config.GetConfig()
 
+	storage := lib.GetStorageService()
+	api := &API{
+		Store: storage.Store,
+	}
+
 	m := http.NewServeMux()
-	m.HandleFunc("GET /api/noteslist/{path...}", apiGetNotes)
-	m.HandleFunc("GET /api/notes/{path...}", apiGetNote)
-	m.HandleFunc("POST /api/notes/{path...}", apiSaveNote)
-	m.HandleFunc("DELETE /api/notes/{path}", apiDeleteNote)
+	m.HandleFunc("GET /api/noteslist/{path...}", api.getNotes)
+	m.HandleFunc("GET /api/notes/{path...}", api.getNote)
+	m.HandleFunc("POST /api/notes/{path...}", api.saveNote)
+	m.HandleFunc("DELETE /api/notes/{path}", api.deleteNote)
 
 	m.HandleFunc("/", getNotes)
 	m.HandleFunc("/note/{path...}", getNotes)
