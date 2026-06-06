@@ -1,4 +1,3 @@
-// Package model
 package lib
 
 type FrontmatterMeta struct {

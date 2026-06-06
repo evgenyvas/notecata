@@ -28,7 +28,7 @@ type API struct {
 	//Cache      Cache
 }
 
-func (api *API) getNotes(w http.ResponseWriter, r *http.Request) {
+func (api *API) GetNotes(w http.ResponseWriter, r *http.Request) {
 	path := r.PathValue("path")
 
 	notes, err := api.Store.Notes(path)
@@ -53,7 +53,7 @@ func (api *API) getNotes(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(apiNotesList)
 }
 
-func (api *API) getNote(w http.ResponseWriter, r *http.Request) {
+func (api *API) GetNote(w http.ResponseWriter, r *http.Request) {
 	path := r.PathValue("path")
 
 	note, err := api.Store.Note(path)
@@ -74,7 +74,7 @@ func (api *API) getNote(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(apiNote)
 }
 
-func (api *API) saveNote(w http.ResponseWriter, r *http.Request) {
+func (api *API) SaveNote(w http.ResponseWriter, r *http.Request) {
 	var note lib.APINotePost
 	err := json.NewDecoder(r.Body).Decode(&note)
 	if err != nil {
@@ -106,7 +106,7 @@ func (api *API) saveNote(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(apiNote)
 }
 
-func (api *API) deleteNote(w http.ResponseWriter, r *http.Request) {
+func (api *API) DeleteNote(w http.ResponseWriter, r *http.Request) {
 	path := r.PathValue("path")
 
 	_, err := api.Store.DeleteNote(path)
@@ -340,10 +340,10 @@ func main() {
 	}
 
 	m := http.NewServeMux()
-	m.HandleFunc("GET /api/noteslist/{path...}", api.getNotes)
-	m.HandleFunc("GET /api/notes/{path...}", api.getNote)
-	m.HandleFunc("POST /api/notes/{path...}", api.saveNote)
-	m.HandleFunc("DELETE /api/notes/{path}", api.deleteNote)
+	m.HandleFunc("GET /api/noteslist/{path...}", api.GetNotes)
+	m.HandleFunc("GET /api/notes/{path...}", api.GetNote)
+	m.HandleFunc("POST /api/notes/{path...}", api.SaveNote)
+	m.HandleFunc("DELETE /api/notes/{path}", api.DeleteNote)
 
 	m.HandleFunc("/", getNotes)
 	m.HandleFunc("/note/{path...}", getNotes)

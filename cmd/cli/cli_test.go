@@ -1,4 +1,4 @@
-package main
+package main_test
 
 import (
 	"bufio"
@@ -6,10 +6,10 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	test "notecata/utils/testing"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"reflect"
 	"runtime"
 	"strings"
 	"testing"
@@ -26,18 +26,13 @@ var binaryPath = ""
 
 func fixturePath(t *testing.T, fixture string) string {
 	_, filename, _, ok := runtime.Caller(0)
-	if !ok {
-		t.Fatalf("problems recovering caller information")
-	}
-
+	test.Assert(t, ok, "problems recovering caller information")
 	return filepath.Join(filepath.Dir(filename), "testdata", fixture)
 }
 
 func writeFixture(t *testing.T, fixture string, content []byte) {
 	err := os.WriteFile(fixturePath(t, fixture), content, 0644)
-	if err != nil {
-		t.Fatal(err)
-	}
+	test.Ok(t, err)
 }
 
 func loadInput(t *testing.T, input *string) *string {
@@ -46,19 +41,14 @@ func loadInput(t *testing.T, input *string) *string {
 	}
 
 	content, err := os.ReadFile(fixturePath(t, *input))
-	if err != nil {
-		t.Fatal(err)
-	}
+	test.Ok(t, err)
 
 	return ptr(string(content))
 }
 
 func loadFixture(t *testing.T, fixture string) string {
 	content, err := os.ReadFile(fixturePath(t, fixture))
-	if err != nil {
-		t.Fatal(err)
-	}
-
+	test.Ok(t, err)
 	return strings.TrimSpace(string(content))
 }
 
@@ -124,9 +114,7 @@ func TestCliArgs(t *testing.T) {
 			dateNow := time.Now()
 			output, err := runBinary(tt.args, loadInput(t, tt.input))
 
-			if err != nil {
-				t.Fatal(err)
-			}
+			test.Ok(t, err)
 
 			if *update {
 				writeFixture(t, tt.fixture, output)
@@ -137,9 +125,7 @@ func TestCliArgs(t *testing.T) {
 			expected := normalize(loadFixture(t, tt.fixture))
 			expected = strings.ReplaceAll(expected, "{{ DATE_NOW }}", dateNow.Format("2006-01-02 15:04:05"))
 
-			if !reflect.DeepEqual(actual, expected) {
-				t.Fatalf("actual = %s, expected = %s", actual, expected)
-			}
+			test.Equals(t, expected, actual)
 		})
 	}
 }
@@ -169,9 +155,7 @@ func TestCliMetadata(t *testing.T) {
 		cmd.Env = append(os.Environ(), "GOCOVERDIR=.coverdata")
 
 		ptmx, err := pty.Start(cmd)
-		if err != nil {
-			t.Fatal(err)
-		}
+		test.Ok(t, err)
 		defer ptmx.Close()
 
 		var transcript bytes.Buffer
@@ -181,29 +165,21 @@ func TestCliMetadata(t *testing.T) {
 
 		// filename
 		err = waitFor(reader, "Enter filename:")
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
+		test.Ok(t, err)
 		fmt.Fprintln(ptmx, fileName)
 
 		// title
 		err = waitFor(reader, "Enter title:")
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
+		test.Ok(t, err)
 		fmt.Fprintln(ptmx, "Test input")
 
 		// tags
 		err = waitFor(reader, "Enter tags separated by spaces:")
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
+		test.Ok(t, err)
 		fmt.Fprintln(ptmx, "input test")
 
 		err = cmd.Wait()
-		if err != nil {
-			t.Fatal(err)
-		}
+		test.Ok(t, err)
 		io.Copy(&transcript, ptmx) // read remain output
 
 		actual := normalize(transcript.String())
@@ -211,9 +187,7 @@ func TestCliMetadata(t *testing.T) {
 
 		expected := normalize(loadFixture(t, "create-meta.golden"))
 
-		if !reflect.DeepEqual(actual, expected) {
-			t.Fatalf("actual = %s, expected = %s", actual, expected)
-		}
+		test.Equals(t, expected, actual)
 	})
 }
 

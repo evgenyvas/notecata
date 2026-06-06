@@ -1,4 +1,4 @@
-package main
+package main_test
 
 import (
 	"bytes"
@@ -7,15 +7,18 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"notecata/internal/lib"
+	test "notecata/utils/testing"
 	"strings"
 	"testing"
 	"time"
+
+	"notecata/cmd/server"
 )
 
 type mockStore struct{}
 
 func (m *mockStore) Note(path string) (*lib.Note, error) {
-	content := `
+	const content = `
 ---
 format: "Markdown"
 date: "2026-05-23 00:57:15"
@@ -69,7 +72,7 @@ func (m *mockStore) DeleteNote(path string) (*lib.Note, error) {
 }
 
 func TestApiGetNotes(t *testing.T) {
-	api := &API{
+	api := &main.API{
 		Store: &mockStore{},
 	}
 
@@ -77,18 +80,16 @@ func TestApiGetNotes(t *testing.T) {
 	req.SetPathValue("path", "docs")
 	rec := httptest.NewRecorder()
 
-	api.getNotes(rec, req)
+	api.GetNotes(rec, req)
 
 	res := rec.Result()
 	defer res.Body.Close()
 
-	if res.StatusCode != http.StatusOK {
-		t.Errorf("expected status OK; got %v", res.Status)
-	}
+	test.Assert(t, res.StatusCode == http.StatusOK, "expected status OK; got %v", res.Status)
 
 	body, _ := io.ReadAll(res.Body)
 
-	expected := `{` +
+	const expected = `{` +
 		`"status":200,` +
 		`"message":"ok",` +
 		`"notes":[` +
@@ -107,13 +108,12 @@ func TestApiGetNotes(t *testing.T) {
 		`}` +
 		`]` +
 		`}`
-	if strings.TrimSpace(string(body)) != expected {
-		t.Errorf("expected %s; got %s", expected, body)
-	}
+
+	test.Equals(t, expected, strings.TrimSpace(string(body)))
 }
 
 func TestApiGetNote(t *testing.T) {
-	api := &API{
+	api := &main.API{
 		Store: &mockStore{},
 	}
 
@@ -121,18 +121,16 @@ func TestApiGetNote(t *testing.T) {
 	req.SetPathValue("path", "docs.md")
 	rec := httptest.NewRecorder()
 
-	api.getNote(rec, req)
+	api.GetNote(rec, req)
 
 	res := rec.Result()
 	defer res.Body.Close()
 
-	if res.StatusCode != http.StatusOK {
-		t.Errorf("expected status OK; got %v", res.Status)
-	}
+	test.Assert(t, res.StatusCode == http.StatusOK, "expected status OK; got %v", res.Status)
 
 	body, _ := io.ReadAll(res.Body)
 
-	expected := `{` +
+	const expected = `{` +
 		`"status":200,` +
 		`"message":"ok",` +
 		`"path":"docs.md",` +
@@ -143,13 +141,12 @@ func TestApiGetNote(t *testing.T) {
 		`"content":"#Test note\n\nnote body\n",` +
 		`"type":"note"` +
 		`}`
-	if strings.TrimSpace(string(body)) != expected {
-		t.Errorf("expected %s; got %s", expected, body)
-	}
+
+	test.Equals(t, expected, strings.TrimSpace(string(body)))
 }
 
 func TestApiSaveNote(t *testing.T) {
-	api := &API{
+	api := &main.API{
 		Store: &mockStore{},
 	}
 
@@ -160,27 +157,23 @@ func TestApiSaveNote(t *testing.T) {
 		Content: "Note create content",
 	}
 	jsonBytes, err := json.Marshal(payload)
-	if err != nil {
-		t.Fatalf("Failed to marshal JSON: %v", err)
-	}
+	test.Assert(t, err == nil, "Failed to marshal JSON: %v", err)
 
 	req := httptest.NewRequest(http.MethodGet, "/notes/docs.md", bytes.NewReader(jsonBytes))
 	req.Header.Set("Content-Type", "application/json")
 	req.SetPathValue("path", "docs.md")
 	rec := httptest.NewRecorder()
 
-	api.saveNote(rec, req)
+	api.SaveNote(rec, req)
 
 	res := rec.Result()
 	defer res.Body.Close()
 
-	if res.StatusCode != http.StatusOK {
-		t.Errorf("expected status OK; got %v", res.Status)
-	}
+	test.Assert(t, res.StatusCode == http.StatusOK, "expected status OK; got %v", res.Status)
 
 	body, _ := io.ReadAll(res.Body)
 
-	expected := `{` +
+	const expected = `{` +
 		`"status":200,` +
 		`"message":"Note docs.md saved successfully",` +
 		`"path":"docs.md",` +
@@ -191,13 +184,12 @@ func TestApiSaveNote(t *testing.T) {
 		`"content":"Note create content",` +
 		`"type":"note"` +
 		`}`
-	if strings.TrimSpace(string(body)) != expected {
-		t.Errorf("expected %s; got %s", expected, body)
-	}
+
+	test.Equals(t, expected, strings.TrimSpace(string(body)))
 }
 
 func TestApiDeleteNote(t *testing.T) {
-	api := &API{
+	api := &main.API{
 		Store: &mockStore{},
 	}
 
@@ -205,22 +197,19 @@ func TestApiDeleteNote(t *testing.T) {
 	req.SetPathValue("path", "docs.md")
 	rec := httptest.NewRecorder()
 
-	api.deleteNote(rec, req)
+	api.DeleteNote(rec, req)
 
 	res := rec.Result()
 	defer res.Body.Close()
 
-	if res.StatusCode != http.StatusOK {
-		t.Errorf("expected status OK; got %v", res.Status)
-	}
+	test.Assert(t, res.StatusCode == http.StatusOK, "expected status OK; got %v", res.Status)
 
 	body, _ := io.ReadAll(res.Body)
 
-	expected := `{` +
+	const expected = `{` +
 		`"status":200,` +
 		`"message":"Note docs.md deleted successfully"` +
 		`}`
-	if strings.TrimSpace(string(body)) != expected {
-		t.Errorf("expected %s; got %s", expected, body)
-	}
+
+	test.Equals(t, expected, strings.TrimSpace(string(body)))
 }
